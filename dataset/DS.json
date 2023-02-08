@@ -1,5 +1,5 @@
 {
-	"name": "DS1",
+	"name": "DS",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "DB1",
