@@ -1,0 +1,18 @@
+{
+	"name": "Blob1_parquet1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Blob1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}
