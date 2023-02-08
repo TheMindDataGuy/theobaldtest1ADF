@@ -123,7 +123,7 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "Blob1_parquet1",
+						"referenceName": "Blob_parquet1",
 						"type": "DatasetReference",
 						"parameters": {
 							"Container": "parquet",

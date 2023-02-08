@@ -1,5 +1,5 @@
 {
-	"name": "Blob1_parquet1",
+	"name": "Blob_parquet1",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "Blob1",
