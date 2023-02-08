@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "theobaldtest1ADF"
+		},
+		"Blob1_accountKey": {
+			"value": ""
+		},
+		"DB1_connectionString": {
+			"value": ""
+		},
+		"Blob1_properties_typeProperties_url": {
+			"value": "https://theobaldtest1blob.dfs.core.windows.net/"
+		}
+	}
+}

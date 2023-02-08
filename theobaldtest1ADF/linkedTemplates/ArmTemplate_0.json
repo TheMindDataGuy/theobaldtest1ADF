@@ -1,0 +1,238 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "theobaldtest1ADF"
+		},
+		"Blob1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'Blob1'"
+		},
+		"DB1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'DB1'"
+		},
+		"Blob1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://theobaldtest1blob.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Blob1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('Blob1_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('Blob1_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DB1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('DB1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Blob_csv1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Blob1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"Conainer": {
+						"type": "string",
+						"defaultValue": "Container"
+					},
+					"Directory": {
+						"type": "string",
+						"defaultValue": "Directory"
+					},
+					"File": {
+						"type": "string",
+						"defaultValue": "File"
+					},
+					"Separator": {
+						"type": "string",
+						"defaultValue": ","
+					},
+					"FirstRowAsHeader": {
+						"type": "bool",
+						"defaultValue": true
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().File",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().Directory",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().Conainer",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": {
+						"value": "@dataset().Separator",
+						"type": "Expression"
+					},
+					"escapeChar": "\\",
+					"firstRowAsHeader": {
+						"value": "@dataset().FirstRowAsHeader",
+						"type": "Expression"
+					},
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Blob1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DB1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"Schema": {
+						"type": "string",
+						"defaultValue": "Schema"
+					},
+					"Table": {
+						"type": "string",
+						"defaultValue": "Table"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().Schema",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().Table",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DB1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data 2 Blob1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": ";WITH [TenList] AS (\n\tSELECT 0 AS [Id] UNION ALL\n\tSELECT 1 AS [Id] UNION ALL\n\tSELECT 2 AS [Id] UNION ALL\n\tSELECT 3 AS [Id] UNION ALL\n\tSELECT 4 AS [Id] UNION ALL\n\tSELECT 5 AS [Id] UNION ALL\n\tSELECT 6 AS [Id] UNION ALL\n\tSELECT 7 AS [Id] UNION ALL\n\tSELECT 8 AS [Id] UNION ALL\n\tSELECT 9 AS [Id]\n), [FullList] AS (\n  SELECT (([One].[Id] + [Ten].[Id] * 10) + [Hundred].[Id] * 100) + [Thousand].[Id] * 1000 + [TenThousand].[Id] * 10000 AS [Number]\n  FROM       TenList AS [One] \n  CROSS JOIN TenList AS [Ten] \n  CROSS JOIN TenList AS [Hundred] \n  CROSS JOIN TenList AS [Thousand]\n  CROSS JOIN TenList AS [TenThousand]\n)\n\nSELECT\n\t [Number] AS [IntNumber]\n\t,CAST(REPLICATE('abc',10) AS nvarchar(30)) AS [ShortText]\n\t,CAST(REPLICATE('abc',1000) AS nvarchar(MAX)) AS [LongText]\n\t,CAST([Number] AS DECIMAL(38,19))/1000 AS [DecimalNumber]\nFROM FullList\nORDER BY Number\n",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "DS1",
+								"type": "DatasetReference",
+								"parameters": {
+									"Schema": "Schema",
+									"Table": "Table"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Blob_csv1",
+								"type": "DatasetReference",
+								"parameters": {
+									"Conainer": "Container",
+									"Directory": "Directory",
+									"File": "File",
+									"Separator": ",",
+									"FirstRowAsHeader": true
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS1')]",
+				"[concat(variables('factoryId'), '/datasets/Blob_csv1')]"
+			]
+		}
+	]
+}
