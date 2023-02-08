@@ -5,11 +5,37 @@
 			"referenceName": "Blob1",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"Container": {
+				"type": "string",
+				"defaultValue": "Container"
+			},
+			"Directory": {
+				"type": "string",
+				"defaultValue": "Directory"
+			},
+			"File": {
+				"type": "string",
+				"defaultValue": "File"
+			}
+		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobFSLocation"
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().File",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().Directory",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().Container",
+					"type": "Expression"
+				}
 			},
 			"compressionCodec": "snappy"
 		},
