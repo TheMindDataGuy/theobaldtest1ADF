@@ -55,6 +55,55 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Blob1_parquet1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Blob1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"Container": {
+						"type": "string",
+						"defaultValue": "Container"
+					},
+					"Directory": {
+						"type": "string",
+						"defaultValue": "Directory"
+					},
+					"File": {
+						"type": "string",
+						"defaultValue": "File"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().File",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().Directory",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().Container",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Blob1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Blob_csv1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -164,9 +213,16 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Copy data 2 Blob1",
+						"name": "Copy csv 2 Blob1",
 						"type": "Copy",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Set variable Dir",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -213,25 +269,112 @@
 								"referenceName": "Blob_csv1",
 								"type": "DatasetReference",
 								"parameters": {
-									"Conainer": "Container",
-									"Directory": "Directory",
-									"File": "File",
+									"Conainer": "csv",
+									"Directory": {
+										"value": "@variables('Dir')",
+										"type": "Expression"
+									},
+									"File": "File.csv",
 									"Separator": ",",
 									"FirstRowAsHeader": true
 								}
 							}
 						]
+					},
+					{
+						"name": "Copy parquet 2 Blob1",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Set variable Dir",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": ";WITH [TenList] AS (\n\tSELECT 0 AS [Id] UNION ALL\n\tSELECT 1 AS [Id] UNION ALL\n\tSELECT 2 AS [Id] UNION ALL\n\tSELECT 3 AS [Id] UNION ALL\n\tSELECT 4 AS [Id] UNION ALL\n\tSELECT 5 AS [Id] UNION ALL\n\tSELECT 6 AS [Id] UNION ALL\n\tSELECT 7 AS [Id] UNION ALL\n\tSELECT 8 AS [Id] UNION ALL\n\tSELECT 9 AS [Id]\n), [FullList] AS (\n  SELECT (([One].[Id] + [Ten].[Id] * 10) + [Hundred].[Id] * 100) + [Thousand].[Id] * 1000 + [TenThousand].[Id] * 10000 AS [Number]\n  FROM       TenList AS [One] \n  CROSS JOIN TenList AS [Ten] \n  CROSS JOIN TenList AS [Hundred] \n  CROSS JOIN TenList AS [Thousand]\n  CROSS JOIN TenList AS [TenThousand]\n)\n\nSELECT\n\t [Number] AS [IntNumber]\n\t,CAST(REPLICATE('abc',10) AS nvarchar(30)) AS [ShortText]\n\t,CAST(REPLICATE('abc',1000) AS nvarchar(MAX)) AS [LongText]\n\t,CAST([Number] AS DECIMAL(38,19))/1000 AS [DecimalNumber]\nFROM FullList\nORDER BY Number\n",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "DS1",
+								"type": "DatasetReference",
+								"parameters": {
+									"Schema": "Schema",
+									"Table": "Table"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Blob1_parquet1",
+								"type": "DatasetReference",
+								"parameters": {
+									"Container": "parquet",
+									"Directory": {
+										"value": "@variables('Dir')",
+										"type": "Expression"
+									},
+									"File": "File.parquet"
+								}
+							}
+						]
+					},
+					{
+						"name": "Set variable Dir",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Dir",
+							"value": {
+								"value": "@utcNow('yyyy-MM-dd/HH:mm:ss')",
+								"type": "Expression"
+							}
+						}
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
+				"variables": {
+					"Dir": {
+						"type": "String"
+					}
+				},
 				"annotations": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS1')]",
-				"[concat(variables('factoryId'), '/datasets/Blob_csv1')]"
+				"[concat(variables('factoryId'), '/datasets/Blob_csv1')]",
+				"[concat(variables('factoryId'), '/datasets/Blob1_parquet1')]"
 			]
 		}
 	]
