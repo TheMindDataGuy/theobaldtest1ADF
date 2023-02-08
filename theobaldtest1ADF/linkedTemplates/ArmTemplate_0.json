@@ -459,7 +459,7 @@
 						]
 					},
 					{
-						"name": "Copy csv 2 DB1",
+						"name": "Copy parquet 2 DB1",
 						"type": "Copy",
 						"dependsOn": [
 							{
@@ -492,7 +492,7 @@
 							"sink": {
 								"type": "AzureSqlSink",
 								"preCopyScript": {
-									"value": "IF OBJECT_ID('[DBO].[CSV]','U') IS NOT NULL DROP TABLE [DBO].[CSV]",
+									"value": "IF OBJECT_ID('[DBO].[parquet]','U') IS NOT NULL DROP TABLE [DBO].[parquet]",
 									"type": "Expression"
 								},
 								"writeBehavior": "insert",
@@ -515,12 +515,12 @@
 								"referenceName": "Blob_csv1",
 								"type": "DatasetReference",
 								"parameters": {
-									"Conainer": "csv",
+									"Conainer": "parquet",
 									"Directory": {
 										"value": "@variables('Dir')",
 										"type": "Expression"
 									},
-									"File": "File.csv",
+									"File": "File.parquet",
 									"Separator": ",",
 									"FirstRowAsHeader": true
 								}
@@ -532,7 +532,7 @@
 								"type": "DatasetReference",
 								"parameters": {
 									"Schema": "dbo",
-									"Table": "csv"
+									"Table": "parquet"
 								}
 							}
 						]
